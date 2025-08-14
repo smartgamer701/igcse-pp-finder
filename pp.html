@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>IGCSE Past Paper Finder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #222;
+            color: white;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        select, input {
+            padding: 8px;
+            font-size: 14px;
+            background-color: black;
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            box-sizing: border-box;
+            flex: 1;
+            min-width: 100px;
+        }
+        select:focus, input:focus {
+            outline: none;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: black;
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #444;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #error {
+            color: #ff6b6b;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>IGCSE Past Paper Finder</h2>
+
+    <div class="form-row">
+        <div class="field">
+            <label for="subject">Subject:</label>
+            <select id="subject">
+                <option>Math</option>
+                <option>English</option>
+                <option>Physics</option>
+                <option>Chemistry</option>
+                <option>Biology</option>
+                <option>Economics</option>
+                <option>ICT</option>
+                <option>French</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="year">Year:</label>
+            <input type="text" id="year" pattern="\d{2}|\d{4}" title="Enter 2 or 4 digits" autocomplete="off">
+        </div>
+
+        <div class="field">
+            <label for="season">Season:</label>
+            <select id="season">
+                <option>Feb/Mar</option>
+                <option>May/Jun</option>
+                <option>Oct/Nov</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label for="paper">Paper/Variant:</label>
+            <input type="text" id="paper" pattern="\d{2}" title="Enter 2 digits" autocomplete="off">
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="openLink('qp')">QP</button>
+        <button onclick="openLink('ms')">MS</button>
+        <button onclick="openLink('er')">ER</button>
+        <button onclick="openLink('gt')">GT</button>
+    </div>
+
+    <div id="error"></div>
+
+    <script>
+        function openLink(type) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = '';
+
+            const paper = document.getElementById('paper').value.trim();
+            const yearRaw = document.getElementById('year').value.trim();
+
+            if (!yearRaw && (type === 'er' || type === 'gt')) {
+                errorEl.textContent = "Enter the year (2 or 4 digits).";
+                return;
+            }
+            if (!yearRaw && (type === 'qp' || type === 'ms') && !paper) {
+                errorEl.textContent = "Enter the paper/variant (2 digits) and year (2 or 4 digits).";
+                return;
+            }
+            if (!yearRaw) {
+                errorEl.textContent = "Enter the year (2 or 4 digits).";
+                return;
+            }
+            if ((type === 'qp' || type === 'ms') && !paper) {
+                errorEl.textContent = "Enter the paper/variant (2 digits).";
+                return;
+            }
+
+            const subjectMap = {
+                "Math": "0607",
+                "English": "0500",
+                "Physics": "0625",
+                "Chemistry": "0620",
+                "Biology": "0610",
+                "Economics": "0455",
+                "ICT": "0417",
+                "French": "0520"
+            };
+
+            const seasonMap = {
+                "Feb/Mar": "m",
+                "May/Jun": "s",
+                "Oct/Nov": "w"
+            };
+
+            const subjectText = document.getElementById('subject').value;
+            const subject = subjectMap[subjectText];
+            let yearInput = yearRaw;
+            if (yearInput.length === 4 && yearInput.startsWith('20')) yearInput = yearInput.substring(2);
+            const seasonText = document.getElementById('season').value;
+            const season = seasonMap[seasonText];
+
+            let url;
+            if (type === 'er' || type === 'gt') {
+                url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subject}_${season}${yearInput}_${type}.pdf`;
+            } else {
+                url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subject}_${season}${yearInput}_${type}_${paper}.pdf`;
+            }
+
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
+
