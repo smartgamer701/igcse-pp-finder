@@ -8,7 +8,6 @@
 * {
     box-sizing: border-box;
 }
-
 html, body {
     margin: 0;
     padding: 0;
@@ -27,7 +26,6 @@ h2 {
     margin: 2vh 0;
     font-size: 4vh;
 }
-/* Wrapper centers the form vertically */
 .wrapper {
     flex: 1;
     display: flex;
@@ -36,7 +34,6 @@ h2 {
     align-items: center;
     width: 100%;
 }
-/* Form container */
 .form-container {
     display: flex;
     flex-direction: column;
@@ -75,7 +72,6 @@ input:focus {
     margin-top: 1vh;
     font-size: 2.2vh;
 }
-/* Year and Paper row - keep side by side on all screen sizes */
 .field-row {
     display: flex;
     width: 100%;
@@ -85,7 +81,6 @@ input:focus {
 .field-row .field {
     flex: 1;
 }
-/* Button groups (subjects, seasons) */
 .button-group {
     display: flex;
     flex-wrap: wrap;
@@ -111,7 +106,6 @@ input:focus {
 .button-group button:hover {
     background-color: #444;
 }
-/* Bottom 4 main buttons in 2x2 grid */
 .buttons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -132,26 +126,19 @@ button.main {
 button.main:hover {
     background-color: #444;
 }
-
-/* Desktop styles */
 @media (min-width: 768px) {
     .form-container, .buttons {
         max-width: 600px;
     }
 }
-
 @media (min-width: 1200px) {
-    /* Only adjust spacing and padding - keep font sizes consistent */
     .field-row {
         gap: 20px;
     }
-    
     input {
         padding: 0 15px;
     }
 }
-
-/* Mobile - keep inputs side by side */
 @media (max-width: 767px) {
     html, body {
         margin: 0 !important;
@@ -159,36 +146,30 @@ button.main:hover {
         width: 100%;
         overflow-x: hidden;
     }
-    
     .wrapper {
         align-items: stretch !important;
         padding: 0;
         margin: 0;
         width: 100%;
     }
-    
     .form-container {
         width: 100% !important;
         margin: 0 !important;
         padding-left: 3vw;
         padding-right: 3vw;
     }
-    
     .buttons {
         width: 100% !important;
         margin: 2vh 0 0 0 !important;
         padding-left: 3vw;
         padding-right: 3vw;
     }
-    
     h2 {
         margin: 1vh 0;
         width: 100%;
         padding-left: 3vw;
         padding-right: 3vw;
     }
-    
-    /* Keep year and paper inputs side by side */
     .field-row {
         display: flex;
         gap: 3vw;
@@ -198,7 +179,6 @@ button.main:hover {
         flex: 1;
         margin: 0;
     }
-    
     input, .button-group button {
         height: 7.5vh;
         font-size: 2.8vh;
@@ -207,12 +187,9 @@ button.main:hover {
         height: 8.5vh;
         font-size: 2.8vh;
     }
-    
     input {
         padding: 0 3vw;
     }
-    
-    /* Adjust labels for side-by-side layout */
     .field-row label {
         font-size: 2.8vh;
     }
@@ -275,35 +252,30 @@ createButtonGroup('seasonButtons', seasons);
 function openLink(type) {
     const errorEl = document.getElementById('error');
     errorEl.textContent = '';
-    
-    const paper = document.getElementById('paper').value.trim();
-    const yearRaw = document.getElementById('year').value.trim();
+
     const subjectBtn = document.querySelector('#subjectButtons button.selected');
+    const yearInput = document.getElementById('year').value.trim();
+    const paperInput = document.getElementById('paper').value.trim();
     const seasonBtn = document.querySelector('#seasonButtons button.selected');
-    
-    if (!subjectBtn) { errorEl.textContent = "Select a subject."; return; }
-    if (!seasonBtn) { errorEl.textContent = "Select a season."; return; }
-    
-    const subject = subjectBtn.textContent;
-    const season = seasonBtn.textContent;
-    
-    if (!yearRaw && (type === 'er' || type === 'gt')) {
-        errorEl.textContent = "Enter the year (2 or 4 digits).";
+
+    // Validation in order
+    if (!subjectBtn) {
+        errorEl.textContent = "Enter the subject.";
         return;
     }
-    if (!yearRaw && (type === 'qp' || type === 'ms') && !paper) {
-        errorEl.textContent = "Enter the paper/variant (2 digits) and year (2 or 4 digits).";
+    if (!yearInput) {
+        errorEl.textContent = "Enter a year (2 or 4 digits).";
         return;
     }
-    if (!yearRaw) {
-        errorEl.textContent = "Enter the year (2 or 4 digits).";
+    if ((type === 'qp' || type === 'ms') && !paperInput) {
+        errorEl.textContent = "Enter a paper/variant (2 digits).";
         return;
     }
-    if ((type === 'qp' || type === 'ms') && !paper) {
-        errorEl.textContent = "Enter the paper/variant (2 digits).";
+    if (!seasonBtn) {
+        errorEl.textContent = "Enter a season.";
         return;
     }
-    
+
     const subjectMap = {
         "Math": "0607",
         "English": "0500",
@@ -314,26 +286,22 @@ function openLink(type) {
         "ICT": "0417",
         "French": "0520"
     };
-    
     const seasonMap = {
         "Feb/Mar": "m",
         "May/Jun": "s",
         "Oct/Nov": "w"
     };
-    
-    const subjCode = subjectMap[subject];
-    const seasonCode = seasonMap[season];
-    
-    let yearInput = yearRaw;
-    if (yearInput.length === 4 && yearInput.startsWith('20')) yearInput = yearInput.substring(2);
-    
-    let url;
-    if (type === 'er' || type === 'gt') {
-        url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${yearInput}_${type}.pdf`;
-    } else {
-        url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${yearInput}_${type}_${paper}.pdf`;
-    }
-    
+
+    const subjCode = subjectMap[subjectBtn.textContent];
+    const seasonCode = seasonMap[seasonBtn.textContent];
+
+    let year = yearInput;
+    if (year.length === 4 && year.startsWith('20')) year = year.substring(2);
+
+    let url = (type === 'er' || type === 'gt') 
+        ? `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${year}_${type}.pdf`
+        : `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${year}_${type}_${paperInput}.pdf`;
+
     window.open(url, '_blank');
 }
 </script>
