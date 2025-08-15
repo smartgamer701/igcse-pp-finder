@@ -1,192 +1,341 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>IGCSE Past Paper Finder</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #222;
-            color: white;
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-        }
-        label {
-            font-weight: bold;
-            margin-right: 5px;
-        }
-        select, input {
-            padding: 8px;
-            font-size: 14px;
-            background-color: black;
-            color: white;
-            border: 1px solid white;
-            border-radius: 5px;
-            box-sizing: border-box;
-            flex: 1;
-            min-width: 100px;
-        }
-        select:focus, input:focus {
-            outline: none;
-        }
-        .buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-        button {
-            padding: 8px 12px;
-            font-size: 14px;
-            background-color: black;
-            color: white;
-            border: 1px solid white;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #444;
-        }
-        .field {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        #error {
-            color: #ff6b6b;
-            margin-top: 15px;
-            font-weight: bold;
-            text-align: center;
-        }
-        @media (max-width: 600px) {
-            .form-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGCSE Past Paper Finder</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background-color: #222;
+    color: white;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+h2 {
+    text-align: center;
+    margin: 2vh 0;
+    font-size: 4vh;
+}
+/* Wrapper centers the form vertically */
+.wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+/* Form container */
+.form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+    width: 95%;
+    margin: 0 auto;
+}
+.field {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+}
+label {
+    font-weight: bold;
+    margin-bottom: 0.5vh;
+    font-size: 3vh;
+}
+input {
+    width: 100%;
+    height: 6vh;
+    font-size: 2.5vh;
+    padding: 0 2vw;
+    border-radius: 8px;
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+}
+input:focus {
+    outline: none;
+}
+#error {
+    color: #ff6b6b;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 1vh;
+    font-size: 2.2vh;
+}
+/* Year and Paper row - keep side by side on all screen sizes */
+.field-row {
+    display: flex;
+    width: 100%;
+    gap: 2vw;  
+    margin: 0; 
+}
+.field-row .field {
+    flex: 1;
+}
+/* Button groups (subjects, seasons) */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1vh;
+    width: 100%;
+}
+.button-group button {
+    flex: 1;
+    min-width: 30%;
+    padding: 1.2vh 0;
+    font-size: 2.5vh;
+    border-radius: 8px;
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.button-group button.selected {
+    border: 3px solid white;
+}
+.button-group button:hover {
+    background-color: #444;
+}
+/* Bottom 4 main buttons in 2x2 grid */
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2vh;
+    width: 95%;
+    margin: 2vh auto 0 auto;
+}
+button.main {
+    width: 100%;
+    height: 7.5vh;
+    font-size: 2.6vh;
+    border-radius: 8px;
+    border: 1px solid white;
+    background-color: black;  
+    color: white;
+    cursor: pointer;
+}
+button.main:hover {
+    background-color: #444;
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+    .form-container, .buttons {
+        max-width: 600px;
+    }
+}
+
+@media (min-width: 1200px) {
+    /* Only adjust spacing and padding - keep font sizes consistent */
+    .field-row {
+        gap: 20px;
+    }
+    
+    input {
+        padding: 0 15px;
+    }
+}
+
+/* Mobile - keep inputs side by side */
+@media (max-width: 767px) {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .wrapper {
+        align-items: stretch !important;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+    
+    .form-container {
+        width: 100% !important;
+        margin: 0 !important;
+        padding-left: 3vw;
+        padding-right: 3vw;
+    }
+    
+    .buttons {
+        width: 100% !important;
+        margin: 2vh 0 0 0 !important;
+        padding-left: 3vw;
+        padding-right: 3vw;
+    }
+    
+    h2 {
+        margin: 1vh 0;
+        width: 100%;
+        padding-left: 3vw;
+        padding-right: 3vw;
+    }
+    
+    /* Keep year and paper inputs side by side */
+    .field-row {
+        display: flex;
+        gap: 3vw;
+        margin: 0;
+    }
+    .field-row .field {
+        flex: 1;
+        margin: 0;
+    }
+    
+    input, .button-group button {
+        height: 7.5vh;
+        font-size: 2.8vh;
+    }
+    button.main {
+        height: 8.5vh;
+        font-size: 2.8vh;
+    }
+    
+    input {
+        padding: 0 3vw;
+    }
+    
+    /* Adjust labels for side-by-side layout */
+    .field-row label {
+        font-size: 2.8vh;
+    }
+}
+</style>
 </head>
 <body>
-    <h2>IGCSE Past Paper Finder</h2>
-
-    <div class="form-row">
+<h2>IGCSE Past Paper Finder</h2>
+<div class="wrapper">
+    <div class="form-container">
         <div class="field">
-            <label for="subject">Subject:</label>
-            <select id="subject">
-                <option>Math</option>
-                <option>English</option>
-                <option>Physics</option>
-                <option>Chemistry</option>
-                <option>Biology</option>
-                <option>Economics</option>
-                <option>ICT</option>
-                <option>French</option>
-            </select>
+            <label>Subject:</label>
+            <div class="button-group" id="subjectButtons"></div>
         </div>
-
+        <div class="field-row">
+            <div class="field">
+                <label for="year">Year:</label>
+                <input type="text" id="year" pattern="\d{2}|\d{4}" title="Enter 2 or 4 digits" autocomplete="off">
+            </div>
+            <div class="field">
+                <label for="paper">Paper/Variant:</label>
+                <input type="text" id="paper" pattern="\d{2}" title="Enter 2 digits" autocomplete="off">
+            </div>
+        </div>
         <div class="field">
-            <label for="year">Year:</label>
-            <input type="text" id="year" pattern="\d{2}|\d{4}" title="Enter 2 or 4 digits" autocomplete="off">
+            <label>Season:</label>
+            <div class="button-group" id="seasonButtons"></div>
         </div>
-
-        <div class="field">
-            <label for="season">Season:</label>
-            <select id="season">
-                <option>Feb/Mar</option>
-                <option>May/Jun</option>
-                <option>Oct/Nov</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label for="paper">Paper/Variant:</label>
-            <input type="text" id="paper" pattern="\d{2}" title="Enter 2 digits" autocomplete="off">
-        </div>
+        <div id="error"></div>
     </div>
-
     <div class="buttons">
-        <button onclick="openLink('qp')">QP</button>
-        <button onclick="openLink('ms')">MS</button>
-        <button onclick="openLink('er')">ER</button>
-        <button onclick="openLink('gt')">GT</button>
+        <button class="main" onclick="openLink('qp')">QP</button>
+        <button class="main" onclick="openLink('ms')">MS</button>
+        <button class="main" onclick="openLink('er')">ER</button>
+        <button class="main" onclick="openLink('gt')">GT</button>
     </div>
+</div>
+<script>
+// Options
+const subjects = ['Math','English','Physics','Chemistry','Biology','Economics','ICT','French'];
+const seasons = ['Feb/Mar','May/Jun','Oct/Nov'];
 
-    <div id="error"></div>
+function createButtonGroup(containerId, options) {
+    const container = document.getElementById(containerId);
+    options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', () => {
+            container.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        });
+        container.appendChild(btn);
+    });
+}
 
-    <script>
-        function openLink(type) {
-            const errorEl = document.getElementById('error');
-            errorEl.textContent = '';
+// Initialize buttons
+createButtonGroup('subjectButtons', subjects);
+createButtonGroup('seasonButtons', seasons);
 
-            const paper = document.getElementById('paper').value.trim();
-            const yearRaw = document.getElementById('year').value.trim();
-
-            if (!yearRaw && (type === 'er' || type === 'gt')) {
-                errorEl.textContent = "Enter the year (2 or 4 digits).";
-                return;
-            }
-            if (!yearRaw && (type === 'qp' || type === 'ms') && !paper) {
-                errorEl.textContent = "Enter the paper/variant (2 digits) and year (2 or 4 digits).";
-                return;
-            }
-            if (!yearRaw) {
-                errorEl.textContent = "Enter the year (2 or 4 digits).";
-                return;
-            }
-            if ((type === 'qp' || type === 'ms') && !paper) {
-                errorEl.textContent = "Enter the paper/variant (2 digits).";
-                return;
-            }
-
-            const subjectMap = {
-                "Math": "0607",
-                "English": "0500",
-                "Physics": "0625",
-                "Chemistry": "0620",
-                "Biology": "0610",
-                "Economics": "0455",
-                "ICT": "0417",
-                "French": "0520"
-            };
-
-            const seasonMap = {
-                "Feb/Mar": "m",
-                "May/Jun": "s",
-                "Oct/Nov": "w"
-            };
-
-            const subjectText = document.getElementById('subject').value;
-            const subject = subjectMap[subjectText];
-            let yearInput = yearRaw;
-            if (yearInput.length === 4 && yearInput.startsWith('20')) yearInput = yearInput.substring(2);
-            const seasonText = document.getElementById('season').value;
-            const season = seasonMap[seasonText];
-
-            let url;
-            if (type === 'er' || type === 'gt') {
-                url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subject}_${season}${yearInput}_${type}.pdf`;
-            } else {
-                url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subject}_${season}${yearInput}_${type}_${paper}.pdf`;
-            }
-
-            window.open(url, '_blank');
-        }
-    </script>
+function openLink(type) {
+    const errorEl = document.getElementById('error');
+    errorEl.textContent = '';
+    
+    const paper = document.getElementById('paper').value.trim();
+    const yearRaw = document.getElementById('year').value.trim();
+    const subjectBtn = document.querySelector('#subjectButtons button.selected');
+    const seasonBtn = document.querySelector('#seasonButtons button.selected');
+    
+    if (!subjectBtn) { errorEl.textContent = "Select a subject."; return; }
+    if (!seasonBtn) { errorEl.textContent = "Select a season."; return; }
+    
+    const subject = subjectBtn.textContent;
+    const season = seasonBtn.textContent;
+    
+    if (!yearRaw && (type === 'er' || type === 'gt')) {
+        errorEl.textContent = "Enter the year (2 or 4 digits).";
+        return;
+    }
+    if (!yearRaw && (type === 'qp' || type === 'ms') && !paper) {
+        errorEl.textContent = "Enter the paper/variant (2 digits) and year (2 or 4 digits).";
+        return;
+    }
+    if (!yearRaw) {
+        errorEl.textContent = "Enter the year (2 or 4 digits).";
+        return;
+    }
+    if ((type === 'qp' || type === 'ms') && !paper) {
+        errorEl.textContent = "Enter the paper/variant (2 digits).";
+        return;
+    }
+    
+    const subjectMap = {
+        "Math": "0607",
+        "English": "0500",
+        "Physics": "0625",
+        "Chemistry": "0620",
+        "Biology": "0610",
+        "Economics": "0455",
+        "ICT": "0417",
+        "French": "0520"
+    };
+    
+    const seasonMap = {
+        "Feb/Mar": "m",
+        "May/Jun": "s",
+        "Oct/Nov": "w"
+    };
+    
+    const subjCode = subjectMap[subject];
+    const seasonCode = seasonMap[season];
+    
+    let yearInput = yearRaw;
+    if (yearInput.length === 4 && yearInput.startsWith('20')) yearInput = yearInput.substring(2);
+    
+    let url;
+    if (type === 'er' || type === 'gt') {
+        url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${yearInput}_${type}.pdf`;
+    } else {
+        url = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${subjCode}_${seasonCode}${yearInput}_${type}_${paper}.pdf`;
+    }
+    
+    window.open(url, '_blank');
+}
+</script>
 </body>
 </html>
-
