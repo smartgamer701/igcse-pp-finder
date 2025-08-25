@@ -414,6 +414,11 @@
           altLabel = 'Audio';
           altExt = 'mp3';
         }
+        else if (codes.subject === 'ICT' && /^[023]/.test(codes.paper)) {
+          altType = 'sf';
+          altLabel = 'Files';
+          altExt = 'zip';
+        }
       }
 
       // Always add QP
@@ -608,6 +613,9 @@
           else if (c.subject === 'French' && c.paper && c.paper.startsWith('1')) {
             const y = parseInt(c.year, 10);
             openDoc(y >= 18 ? 'sf' : 'su', 'mp3');
+          }
+          else if (c.subject === 'ICT' && c.paper && /^[023]/.test(c.paper)) {
+            openDoc('sf', 'zip');
           }
         }
       }
