@@ -259,373 +259,367 @@
   </div>
 
   <script>
-    /* ========= CONFIG DATA ========= */
-    const subjects = ['Math', 'English', 'Physics', 'Chemistry', 'Biology', 'Economics', 'ICT', 'French'];
-    const seasons = ['Feb/Mar', 'May/Jun', 'Oct/Nov'];
+  /* ========= CONFIG DATA ========= */
+  const subjects = ['Math', 'English', 'Physics', 'Chemistry', 'Biology', 'Economics', 'ICT', 'French'];
+  const seasons = ['Feb/Mar', 'May/Jun', 'Oct/Nov'];
 
-    let kbdStep = 0; // tracks keyboard "focus step"
+  let kbdStep = 0; // tracks keyboard "focus step"
 
-    /* ========= STEP HANDLING ========= */
-    function advanceStep() {
-      kbdStep = (kbdStep + 1) % 5;
-      clampStep();
-      focusForStep();
-    }
+  /* ========= STEP HANDLING ========= */
+  function advanceStep() {
+    kbdStep = (kbdStep + 1) % 5;
+    clampStep();
+    focusForStep();
+  }
 
-    function retreatStep() {
-      kbdStep = (kbdStep - 1 + 5) % 5;
-      clampStep();
-      focusForStep();
-    }
+  function retreatStep() {
+    kbdStep = (kbdStep - 1 + 5) % 5;
+    clampStep();
+    focusForStep();
+  }
 
-    /* ========= BUTTON CREATION ========= */
-    function createButtonGroup(containerId, options, startNum = 1, advanceOnClick = true) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
+  /* ========= BUTTON CREATION ========= */
+  function createButtonGroup(containerId, options, startNum = 1, advanceOnClick = true) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
 
-      options.forEach((opt, idx) => {
-        const btn = document.createElement('button');
-        btn.innerHTML = `<span class="hint">${startNum + idx}</span>${opt}`;
-        btn.dataset.index = String(startNum + idx);
+    options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `<span class="hint">${startNum + idx}</span>${opt}`;
+      btn.dataset.index = String(startNum + idx);
 
-        btn.addEventListener('click', () => {
-          // only one button selected at a time
-          container.querySelectorAll('button').forEach((b) => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          updateQPButtons();
-          updateOtherButtons();
-          if (advanceOnClick) {
-            advanceStep();
-          }
-        });
-
-        container.appendChild(btn);
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('button').forEach((b) => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        updateQPButtons();
+        updateOtherButtons();
+        if (advanceOnClick) {
+          advanceStep();
+        }
       });
+
+      container.appendChild(btn);
+    });
+  }
+
+  createButtonGroup('subjectButtons', subjects, 1, false);
+  createButtonGroup('seasonButtons', seasons, 1, false);
+
+  /* ========= HELPER: GET CURRENT CODES ========= */
+  function getCodes() {
+    const subjectBtn = document.querySelector('#subjectButtons button.selected');
+    const yearInput = document.getElementById('year').value.trim();
+    const paperInput = document.getElementById('paper').value.trim();
+    const seasonBtn = document.querySelector('#seasonButtons button.selected');
+    if (!subjectBtn || !yearInput || !seasonBtn) {
+      return null;
     }
 
-    // build subject + season groups
-    createButtonGroup('subjectButtons', subjects, 1, false);
-    createButtonGroup('seasonButtons', seasons, 1, false);
+    const subjectMap = {
+      Math: '0607',
+      English: '0500',
+      Physics: '0625',
+      Chemistry: '0620',
+      Biology: '0610',
+      Economics: '0455',
+      ICT: '0417',
+      French: '0520'
+    };
+    const seasonMap = { 'Feb/Mar': 'm', 'May/Jun': 's', 'Oct/Nov': 'w' };
 
-    /* ========= HELPER: GET CURRENT CODES ========= */
-    function getCodes() {
-      const subjectBtn = document.querySelector('#subjectButtons button.selected');
-      const yearInput = document.getElementById('year').value.trim();
-      const paperInput = document.getElementById('paper').value.trim();
-      const seasonBtn = document.querySelector('#seasonButtons button.selected');
-      if (!subjectBtn || !yearInput || !seasonBtn) {
-        return null;
-      }
+    let year = yearInput;
+    if (year.length === 4 && year.startsWith('20')) {
+      year = year.substring(2);
+    }
 
-      const subjectMap = {
-        Math: '0607',
-        English: '0500',
-        Physics: '0625',
-        Chemistry: '0620',
-        Biology: '0610',
-        Economics: '0455',
-        ICT: '0417',
-        French: '0520'
+    return {
+      subjCode: subjectMap[subjectBtn.textContent.replace(/^[0-9]+/, '')],
+      seasonCode: seasonMap[seasonBtn.textContent.replace(/^[0-9]+/, '')],
+      year,
+      paper: paperInput,
+      subject: subjectBtn.textContent.replace(/^[0-9]+/, '').trim(),
+      fullYear: yearInput
+    };
+  }
+
+  /* ========= ERROR DISPLAY ========= */
+  function showError(msg) {
+    document.getElementById('error').textContent = msg;
+  }
+
+  /* ========= DOCUMENT URL BUILDER ========= */
+  function openDoc(type, ext = 'pdf') {
+  const c = getCodes();
+  if (!c) {
+    showError('Fill all fields first.');
+    return;
+  }
+  if (['qp', 'ms', 'tn', 'in', 'sf', 'su'].includes(type) && c.paper === '') {
+    showError('Enter paper/variant.');
+    return;
+  }
+  showError('');
+
+  const base = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${c.subjCode}_${c.seasonCode}${c.year}_`;
+  let url;
+  let paper = c.paper;
+
+  if (type === 'tn') {
+    url = `${base}tn_${c.paper}.pdf`;
+  }
+  else if (type === 'er') {
+    url = `${base}er.pdf`;
+  }
+  else if (type === 'gt') {
+    url = `${base}gt.pdf`;
+  }
+  else {
+    // 🔹 ICT Oct/Nov MS → strip leading zero from 02/03
+    if (
+      type === "ms" &&
+      c.subject === "ICT" &&
+      (c.paper === "02" || c.paper === "03" || c.paper === "2" || c.paper === "3") &&
+      c.seasonCode === "w"
+    ) {
+      paper = String(parseInt(c.paper, 10));
+    }
+
+    // 🔹 ICT QP or Files → add leading zero if 2/3 entered
+    else if (
+      (type === "qp" || (type === "sf" && ext === "zip")) &&
+      c.subject === "ICT" &&
+      (c.paper === "2" || c.paper === "3")
+    ) {
+      paper = c.paper.padStart(2, "0");
+    }
+
+    url = `${base}${type}_${paper}.${ext}`;
+  }
+
+  window.open(url, '_blank');
+  }
+
+  /* ========= UPDATE QP + MS/ALT/TN ========= */
+  function updateQPButtons() {
+    const codes = getCodes();
+    const qpMsContainer = document.getElementById('qpMsContainer');
+    qpMsContainer.innerHTML = '';
+
+    if (codes && codes.subject === 'French' && codes.paper === '03') {
+      const tn = document.createElement('button');
+      tn.className = 'main';
+      tn.id = 'tnBtn';
+      tn.innerHTML = '<span class="hint">1</span>TN';
+      tn.onclick = () => {
+        openDoc('tn');
       };
-      const seasonMap = { 'Feb/Mar': 'm', 'May/Jun': 's', 'Oct/Nov': 'w' };
+      qpMsContainer.appendChild(tn);
+      return;
+    }
 
-      let year = yearInput;
-      if (year.length === 4 && year.startsWith('20')) {
-        year = year.substring(2);
+    let altType = null;
+    let altExt = 'pdf';
+    let altLabel = '';
+    if (codes && codes.paper !== '') {
+      if (codes.subject === 'English') {
+        altType = 'in';
+        altLabel = 'IN';
       }
+      else if (codes.subject === 'French' && codes.paper.startsWith('1')) {
+        const y = parseInt(codes.year, 10);
+        altType = y >= 18 ? 'sf' : 'su';
+        altLabel = 'Audio';
+        altExt = 'mp3';
+      }
+      else if (codes.subject === 'ICT' && /^[023]/.test(codes.paper)) {
+        altType = 'sf';
+        altLabel = 'Files';
+        altExt = 'zip';
+      }
+    }
 
-      return {
-        subjCode: subjectMap[subjectBtn.textContent.replace(/^[0-9]+/, '')],
-        seasonCode: seasonMap[seasonBtn.textContent.replace(/^[0-9]+/, '')],
-        year,
-        paper: paperInput,
-        subject: subjectBtn.textContent.replace(/^[0-9]+/, '').trim(),
-        fullYear: yearInput
+    const qp = document.createElement('button');
+    qp.className = 'main';
+    qp.id = 'qpBtn';
+    qp.innerHTML = '<span class="hint">1</span>QP';
+    qp.onclick = () => {
+      openDoc('qp');
+    };
+    qpMsContainer.appendChild(qp);
+
+    if (!altType) {
+      const ms = document.createElement('button');
+      ms.className = 'main';
+      ms.id = 'msBtn';
+      ms.innerHTML = '<span class="hint">2</span>MS';
+      ms.onclick = () => {
+        openDoc('ms');
       };
+      qpMsContainer.appendChild(ms);
+    }
+    else {
+      const alt = document.createElement('button');
+      alt.className = 'main';
+      alt.id = 'altBtn';
+      alt.innerHTML = '<span class="hint">5</span>' + altLabel;
+      alt.onclick = () => {
+        openDoc(altType, altExt);
+      };
+
+      const ms = document.createElement('button');
+      ms.className = 'main';
+      ms.id = 'msBtn';
+      ms.innerHTML = '<span class="hint">2</span>MS';
+      ms.onclick = () => {
+        openDoc('ms');
+      };
+
+      qpMsContainer.appendChild(alt);
+      qpMsContainer.appendChild(ms);
+    }
+  }
+
+  /* ========= UPDATE ER + GT BUTTONS ========= */
+  function updateOtherButtons() {
+    document.getElementById('erBtn').onclick = () => {
+      openDoc('er');
+    };
+    document.getElementById('gtBtn').onclick = () => {
+      openDoc('gt');
+    };
+  }
+
+  /* ========= EVENT LISTENERS ========= */
+  ['year', 'paper'].forEach((id) =>
+    document.getElementById(id).addEventListener('input', () => {
+      updateQPButtons();
+      updateOtherButtons();
+    })
+  );
+
+  ['subjectButtons', 'seasonButtons'].forEach((id) =>
+    document.getElementById(id).addEventListener('click', () => {
+      updateQPButtons();
+      updateOtherButtons();
+    })
+  );
+
+  /* ========= KEYBOARD HELPERS ========= */
+  function clearKbdGuides() {
+    document.querySelectorAll('.kbd-step').forEach((el) => el.classList.remove('kbd-step'));
+  }
+
+  function markStep(step) {
+    clearKbdGuides();
+    const ids = ['subjectField', 'yearField', 'paperField', 'seasonField', null];
+    if (ids[step]) {
+      document.getElementById(ids[step]).classList.add('kbd-step');
+    }
+    else {
+      document.querySelector('.buttons').classList.add('kbd-step');
+    }
+  }
+
+  function clampStep() {
+    if (kbdStep < 0) kbdStep = 0;
+    if (kbdStep > 4) kbdStep = 4;
+    markStep(kbdStep);
+  }
+
+  function focusForStep() {
+    if (kbdStep === 1) {
+      document.getElementById('year').focus();
+    }
+    else if (kbdStep === 2) {
+      document.getElementById('paper').focus();
+    }
+    else {
+      document.activeElement.blur?.();
+    }
+  }
+
+  function selectByNumber(list, key) {
+    const idx = parseInt(key, 10) - 1;
+    if (idx >= 0 && list[idx]) {
+      list[idx].click();
+    }
+  }
+
+  function getSubjectButtons() {
+    return Array.from(document.querySelectorAll('#subjectButtons button'));
+  }
+
+  function getSeasonButtons() {
+    return Array.from(document.querySelectorAll('#seasonButtons button'));
+  }
+
+  /* ========= KEYBOARD HANDLING ========= */
+  document.addEventListener('keydown', (e) => {
+    const inYear = document.activeElement === document.getElementById('year');
+    const inPaper = document.activeElement === document.getElementById('paper');
+    const stepAtKeydown = kbdStep;
+
+    if (e.key === 'Enter' || e.key === 'Tab') {
+      e.preventDefault();
+      if (e.shiftKey) retreatStep();
+      else advanceStep();
+      return;
     }
 
-    /* ========= ERROR DISPLAY ========= */
-    function showError(msg) {
-      document.getElementById('error').textContent = msg;
+    if (inYear || inPaper) return;
+    if (!/^[0-9]$/.test(e.key)) return;
+
+    if (stepAtKeydown === 0) {
+      e.preventDefault();
+      selectByNumber(getSubjectButtons(), e.key);
     }
 
-    /* ========= DOCUMENT URL BUILDER ========= */
-    function openDoc(type, ext = 'pdf') {
+    if (stepAtKeydown === 3) {
+      e.preventDefault();
+      selectByNumber(getSeasonButtons(), e.key);
+    }
+
+    if (stepAtKeydown === 4) {
+      e.preventDefault();
       const c = getCodes();
       if (!c) {
         showError('Fill all fields first.');
         return;
       }
-      if (['qp', 'ms', 'tn', 'in', 'sf', 'su'].includes(type) && c.paper === '') {
-        showError('Enter paper/variant.');
-        return;
+
+      if (e.key === '1') {
+        if (c.subject === 'French' && c.paper === '03') openDoc('tn');
+        else openDoc('qp');
       }
-      showError('');
-
-      const base = `https://pastpapers.papacambridge.com/directories/CAIE/CAIE-pastpapers/upload/${c.subjCode}_${c.seasonCode}${c.year}_`;
-      let url;
-      if (type === 'tn') {
-        url = `${base}tn_${c.paper}.pdf`;
+      else if (e.key === '2') {
+        openDoc('ms');
       }
-      else if (type === 'er') {
-        url = `${base}er.pdf`;
-      }
-      else if (type === 'gt') {
-        url = `${base}gt.pdf`;
-      }
-      else {
-        url = `${base}${type}_${c.paper}.${ext}`;
-      }
-
-      window.open(url, '_blank');
-    }
-
-    /* ========= UPDATE QP + MS/ALT/TN ========= */
-    function updateQPButtons() {
-      const codes = getCodes();
-      const qpMsContainer = document.getElementById('qpMsContainer');
-      qpMsContainer.innerHTML = '';
-
-      // French paper 03 special case → TN
-      if (codes && codes.subject === 'French' && codes.paper === '03') {
-        const tn = document.createElement('button');
-        tn.className = 'main';
-        tn.id = 'tnBtn';
-        tn.innerHTML = '<span class="hint">1</span>TN';
-        tn.onclick = () => {
-          openDoc('tn');
-        };
-        qpMsContainer.appendChild(tn);
-        return;
-      }
-
-      // ALT button conditions
-      let altType = null;
-      let altExt = 'pdf';
-      let altLabel = '';
-      if (codes && codes.paper !== '') {
-        if (codes.subject === 'English') {
-          altType = 'in';
-          altLabel = 'IN';
-        }
-        else if (codes.subject === 'French' && codes.paper.startsWith('1')) {
-          const y = parseInt(codes.year, 10);
-          altType = y >= 18 ? 'sf' : 'su';
-          altLabel = 'Audio';
-          altExt = 'mp3';
-        }
-        else if (codes.subject === 'ICT' && /^[023]/.test(codes.paper)) {
-          altType = 'sf';
-          altLabel = 'Files';
-          altExt = 'zip';
-        }
-      }
-
-      // Always add QP
-      const qp = document.createElement('button');
-      qp.className = 'main';
-      qp.id = 'qpBtn';
-      qp.innerHTML = '<span class="hint">1</span>QP';
-      qp.onclick = () => {
-        openDoc('qp');
-      };
-      qpMsContainer.appendChild(qp);
-
-      // Add MS and possibly ALT
-      if (!altType) {
-        const ms = document.createElement('button');
-        ms.className = 'main';
-        ms.id = 'msBtn';
-        ms.innerHTML = '<span class="hint">2</span>MS';
-        ms.onclick = () => {
-          openDoc('ms');
-        };
-        qpMsContainer.appendChild(ms);
-      }
-      else {
-        const alt = document.createElement('button');
-        alt.className = 'main';
-        alt.id = 'altBtn';
-        alt.innerHTML = '<span class="hint">5</span>' + altLabel;
-        alt.onclick = () => {
-          openDoc(altType, altExt);
-        };
-
-        const ms = document.createElement('button');
-        ms.className = 'main';
-        ms.id = 'msBtn';
-        ms.innerHTML = '<span class="hint">2</span>MS';
-        ms.onclick = () => {
-          openDoc('ms');
-        };
-
-        qpMsContainer.appendChild(alt);
-        qpMsContainer.appendChild(ms);
-      }
-    }
-
-    /* ========= UPDATE ER + GT BUTTONS ========= */
-    function updateOtherButtons() {
-      document.getElementById('erBtn').onclick = () => {
+      else if (e.key === '3') {
         openDoc('er');
-      };
-      document.getElementById('gtBtn').onclick = () => {
+      }
+      else if (e.key === '4') {
         openDoc('gt');
-      };
-    }
-
-    /* ========= EVENT LISTENERS ========= */
-    ['year', 'paper'].forEach((id) =>
-      document.getElementById(id).addEventListener('input', () => {
-        updateQPButtons();
-        updateOtherButtons();
-      })
-    );
-
-    ['subjectButtons', 'seasonButtons'].forEach((id) =>
-      document.getElementById(id).addEventListener('click', () => {
-        updateQPButtons();
-        updateOtherButtons();
-      })
-    );
-
-    /* ========= KEYBOARD HELPERS ========= */
-    function clearKbdGuides() {
-      document.querySelectorAll('.kbd-step').forEach((el) => el.classList.remove('kbd-step'));
-    }
-
-    function markStep(step) {
-      clearKbdGuides();
-      const ids = ['subjectField', 'yearField', 'paperField', 'seasonField', null];
-      if (ids[step]) {
-        document.getElementById(ids[step]).classList.add('kbd-step');
       }
-      else {
-        document.querySelector('.buttons').classList.add('kbd-step'); // last group
-      }
-    }
-
-    function clampStep() {
-      if (kbdStep < 0) {
-        kbdStep = 0;
-      }
-      if (kbdStep > 4) {
-        kbdStep = 4;
-      }
-      markStep(kbdStep);
-    }
-
-    function focusForStep() {
-      if (kbdStep === 1) {
-        document.getElementById('year').focus();
-      }
-      else if (kbdStep === 2) {
-        document.getElementById('paper').focus();
-      }
-      else {
-        document.activeElement.blur?.();
-      }
-    }
-
-    function selectByNumber(list, key) {
-      const idx = parseInt(key, 10) - 1;
-      if (idx >= 0 && list[idx]) {
-        list[idx].click();
-      }
-    }
-
-    function getSubjectButtons() {
-      return Array.from(document.querySelectorAll('#subjectButtons button'));
-    }
-
-    function getSeasonButtons() {
-      return Array.from(document.querySelectorAll('#seasonButtons button'));
-    }
-
-    /* ========= KEYBOARD HANDLING ========= */
-    document.addEventListener('keydown', (e) => {
-      const inYear = document.activeElement === document.getElementById('year');
-      const inPaper = document.activeElement === document.getElementById('paper');
-      const stepAtKeydown = kbdStep;
-
-      // Tab/Enter move between steps
-      if (e.key === 'Enter' || e.key === 'Tab') {
-        e.preventDefault();
-        if (e.shiftKey) {
-          retreatStep();
+      else if (e.key === '5') {
+        if (c.subject === 'English') {
+          openDoc('in');
         }
-        else {
-          advanceStep();
+        else if (c.subject === 'French' && c.paper && c.paper.startsWith('1')) {
+          const y = parseInt(c.year, 10);
+          openDoc(y >= 18 ? 'sf' : 'su', 'mp3');
         }
-        return;
-      }
-
-      // Ignore number shortcuts while typing in inputs
-      if (inYear || inPaper) {
-        return;
-      }
-      if (!/^[0-9]$/.test(e.key)) {
-        return;
-      }
-
-      // Step 0 = subject selection
-      if (stepAtKeydown === 0) {
-        e.preventDefault();
-        selectByNumber(getSubjectButtons(), e.key);
-      }
-
-      // Step 3 = season selection
-      if (stepAtKeydown === 3) {
-        e.preventDefault();
-        selectByNumber(getSeasonButtons(), e.key);
-      }
-
-      // Step 4 = document buttons → open directly (NO advanceStep to prevent wrapping)
-      if (stepAtKeydown === 4) {
-        e.preventDefault();
-        const c = getCodes();
-        if (!c) {
-          showError('Fill all fields first.');
-          return;
-        }
-
-        if (e.key === '1') {
-          if (c.subject === 'French' && c.paper === '03') {
-            openDoc('tn');
-          }
-          else {
-            openDoc('qp');
-          }
-        }
-        else if (e.key === '2') {
-          openDoc('ms');
-        }
-        else if (e.key === '3') {
-          openDoc('er');
-        }
-        else if (e.key === '4') {
-          openDoc('gt');
-        }
-        else if (e.key === '5') {
-          if (c.subject === 'English') {
-            openDoc('in');
-          }
-          else if (c.subject === 'French' && c.paper && c.paper.startsWith('1')) {
-            const y = parseInt(c.year, 10);
-            openDoc(y >= 18 ? 'sf' : 'su', 'mp3');
-          }
-          else if (c.subject === 'ICT' && c.paper && /^[023]/.test(c.paper)) {
-            openDoc('sf', 'zip');
-          }
+        else if (c.subject === 'ICT' && c.paper && /^[023]/.test(c.paper)) {
+          openDoc('sf', 'zip');
         }
       }
-    });
+    }
+  });
 
-    /* ========= INITIAL SETUP ========= */
-    updateQPButtons();
-    updateOtherButtons();
-    clampStep();
-    focusForStep();
+  /* ========= INITIAL SETUP ========= */
+  updateQPButtons();
+  updateOtherButtons();
+  clampStep();
+  focusForStep();
   </script>
 </body>
 </html>
